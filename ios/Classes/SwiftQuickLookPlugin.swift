@@ -3,37 +3,46 @@ import UIKit
 import QuickLook
 
 public class SwiftQuickLookPlugin: NSObject, FlutterPlugin {
-  public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "quick_look", binaryMessenger: registrar.messenger())
-    let instance = SwiftQuickLookPlugin()
-    registrar.addMethodCallDelegate(instance, channel: channel)
-  }
-
-  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-      if call.method == "openURL" {
-        if let resourceURL = call.arguments as? String {
-            if let rootViewController = topViewController() {
-                let quickLookVC = QuickLookViewController([resourceURL], result)
-                rootViewController.present(quickLookVC, animated: true)
-                return
-            }
+    public static func register(with registrar: FlutterPluginRegistrar) {
+        let channel = FlutterMethodChannel(name: "quick_look", binaryMessenger: registrar.messenger())
+        let instance = SwiftQuickLookPlugin()
+        registrar.addMethodCallDelegate(instance, channel: channel)
+    }
+    
+    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard call.method == "openURL" || call.method == "openURLs" else {
+            result(false)
+            return
         }
-        result(false)
-      } else if call.method == "openURLs" {
-          if let resourceURLs = call.arguments as? [String] {
-            if let rootViewController = topViewController() {
-                let quickLookVC = QuickLookViewController(resourceURLs, result)
-                rootViewController.present(quickLookVC, animated: true)
-                return
-            }
+        
+        var resourceURLs: [String] = []
+        
+        if let url = call.arguments as? String {
+            resourceURLs = [url]
+        } else if let urls = call.arguments as? [String] {
+            resourceURLs = urls
+        } else {
+            result(false)
+            return
         }
-        result(false)
-      }
-  }
+        
+        guard !resourceURLs.isEmpty else {
+            result(false)
+            return
+        }
+        
+        guard let rootViewController = topViewController() else {
+            result(false)
+            return
+        }
+        
+        let quickLookViewController = QuickLookViewController(resourceURLs, result)
+        rootViewController.present(quickLookViewController, animated: true)
+    }
     
     private func topViewController() -> UIViewController? {
         let keyWindow = UIApplication.shared.windows.filter {$0.isKeyWindow}.first
-
+        
         if var topController = keyWindow?.rootViewController {
             while let presentedViewController = topController.presentedViewController {
                 topController = presentedViewController
