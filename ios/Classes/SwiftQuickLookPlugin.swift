@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import QuickLook
+import os
 
 public class SwiftQuickLookPlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -86,7 +87,17 @@ class QuickLookViewController: UIViewController, QLPreviewControllerDataSource {
     }
     
     func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
-        let url = URL(string: self.urlsOfResources[index])!
-        return url as QLPreviewItem
+        if let url = URL(string: self.urlsOfResources[index]) {
+            return url as QLPreviewItem
+        }
+        
+        if #available(iOS 14.0, *) {
+            let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "quicklook")
+            logger.error("Could not create URL from index \(index). Count of urls: \(self.urlsOfResources.count). URL at index: \(self.urlsOfResources[index])")
+        } else {
+            print("Could not create URL from index \(index). Count of urls: \(self.urlsOfResources.count). URL at index: \(self.urlsOfResources[index])")
+        }
+        
+        return URL(string: "not-found ")! as QLPreviewItem
     }
 }
