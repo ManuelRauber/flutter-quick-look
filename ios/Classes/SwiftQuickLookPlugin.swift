@@ -87,6 +87,11 @@ class QuickLookViewController: UIViewController, QLPreviewControllerDataSource {
     }
     
     func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
+        if #available(iOS 14.0, *) {
+            let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "quicklook")
+            logger.error("Trying to create URL from index \(index). Count of urls: \(self.urlsOfResources.count). URL at index: \(self.urlsOfResources[index])")
+        }
+        
         if let url = URL(string: self.urlsOfResources[index]) {
             return url as QLPreviewItem
         }
@@ -98,6 +103,6 @@ class QuickLookViewController: UIViewController, QLPreviewControllerDataSource {
             print("Could not create URL from index \(index). Count of urls: \(self.urlsOfResources.count). URL at index: \(self.urlsOfResources[index])")
         }
         
-        return URL(string: "not-found ")! as QLPreviewItem
+        return URL(string: "not-found")! as QLPreviewItem
     }
 }
